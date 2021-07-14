@@ -3,6 +3,7 @@ import logo from "./logo.svg";
 import { DialogOverlay, DialogContent } from "./Dialog";
 import "./App.css";
 
+
 function App() {
   let [isOpen, setIsOpen] = React.useState(false);
   let rootRef = React.useRef(null);
@@ -17,18 +18,17 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <button className="button" onClick={open} tabIndex={-1}>
+        <button className="button" onClick={open}>
           Open Dialog
         </button>
       </header>
       <DialogOverlay
         isOpen={isOpen}
         onDismiss={close}
-        aria-labelledby="dialog-heading"
         rootRef={rootRef}
         initialFocusRef={closeButtonRef}
       >
-        <DialogContent>
+        <DialogContent aria-labelledby="dialog-heading">
           <h2 id="dialog-heading">Friendly announcement</h2>
           <p>Hello there 👋 I am a dialog!</p>
           <input type="text" aria-label="Name" placeholder="Name..." />

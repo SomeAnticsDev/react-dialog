@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import {RemoveScroll} from 'react-remove-scroll'
 
 const DialogOverlay = React.forwardRef(
   ({ isOpen = true, ...props }, forwardedRef) => {
@@ -14,8 +15,32 @@ const DialogOverlay = React.forwardRef(
 DialogOverlay.displayName = "DialogOverlay";
 
 const DialogInner = React.forwardRef(
-  ({ onDismiss = noop, ...props }, forwardedRef) => {
+  ({ onDismiss = noop, rootRef, initialFocusRef, onKeyDown, onClick, onMouseDown, ...props }, forwardedRef) => {
     let mouseDownTarget = React.useRef(null);
+
+	React.useEffect(() => {
+		const rootNode = rootRef.current;
+		const initialFocusNode = initialFocusRef?.current;
+		const triggerNode = document.activeElement;
+
+		rootNode.inert = true;
+
+		if (initialFocusNode) {
+			initialFocusNode.focus();
+		}
+
+		return () => {
+			rootNode.inert = false;
+			triggerNode.focus();
+		};
+	}, [rootRef, initialFocusRef]);
+
+	function handleKeyDown(event) {
+		if (event.key === 'Escape') {
+			event.stopPropagation();
+			onDismiss(event);
+		}
+	}
 
     function handleClick(event) {
       if (mouseDownTarget.current === event.target) {
@@ -29,30 +54,36 @@ const DialogInner = React.forwardRef(
     }
 
     return (
-      <div
-        {...props}
-        ref={forwardedRef}
-        data-dialog-overlay=""
-        onClick={handleClick}
-        onMouseDown={handleMouseDown}
-      />
+		<RemoveScroll>
+			<div
+				{...props}
+				ref={forwardedRef}
+				data-dialog-overlay=""
+				onClick={composeEventHandlers(onClick, handleClick)}
+				onMouseDown={composeEventHandlers(onMouseDown, handleMouseDown)}
+				onKeyDown={composeEventHandlers(onKeyDown, handleKeyDown)}
+			/>
+	  	</RemoveScroll>
     );
   }
 );
 
 DialogOverlay.displayName = "DialogOverlay";
 
-const DialogContent = React.forwardRef(({ ...props }, forwardedRef) => {
+const DialogContent = React.forwardRef(({ onClick, ...props }, forwardedRef) => {
   function handleClick(event) {
     event.stopPropagation();
   }
 
   return (
     <div
+	  aria-modal="true"
+	  role="dialog"
+	  tabIndex="-1"
       {...props}
       ref={forwardedRef}
       data-dialog-content=""
-      onClick={handleClick}
+      onClick={composeEventHandlers(onClick, handleClick)}
     />
   );
 });
